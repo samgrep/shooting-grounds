@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WebVR Shooting Grounds</title>
-  <script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script>
+  <title>WebVR Training Battleground - Pegboard & Terminal</title>
+  <!-- A-Frame versi 1.6.0 -->
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <style>
     body { margin: 0; overflow: hidden; background-color: #0b0f19; font-family: sans-serif; }
   </style>
@@ -581,6 +582,65 @@
       gain.connect(ctx.destination);
       src.start(t);
     }
+
+    // ==========================================================
+    // 2B. MUSIK LATAR (LobbyTheme.mp3, satu folder dengan file ini)
+    //     Browser memblokir autoplay, jadi musik mulai pada interaksi pertama
+    //     (klik / tombol / sentuh / masuk VR). Tombol M = mute/unmute.
+    // ==========================================================
+    const BGM = {
+      src: 'LobbyTheme.mp3',
+      volume: 0.35,
+      audio: null,
+      started: false,
+      muted: false,
+
+      init() {
+        this.audio = new Audio(this.src);
+        this.audio.loop = true;
+        this.audio.volume = this.volume;
+        this.audio.preload = 'auto';
+        this.audio.addEventListener('error', () => {
+          console.warn(`Musik latar gagal dimuat: pastikan ${this.src} ada di folder yang sama dengan battlegrounds.html`);
+        });
+
+        const unlock = () => this.start();
+        ['pointerdown', 'keydown', 'touchstart'].forEach((evt) => {
+          window.addEventListener(evt, unlock, { once: true, passive: true });
+        });
+        document.querySelector('a-scene').addEventListener('enter-vr', unlock);
+
+        // Hentikan sementara saat tab disembunyikan
+        document.addEventListener('visibilitychange', () => {
+          if (!this.started || this.muted) return;
+          if (document.hidden) this.audio.pause();
+          else this.audio.play().catch(() => {});
+        });
+
+        window.addEventListener('keydown', (e) => {
+          if (e.code === 'KeyM' && !e.repeat) this.toggleMute();
+        });
+      },
+
+      start() {
+        if (this.started || !this.audio) return;
+        this.started = true;
+        if (!this.muted) this.audio.play().catch(() => { this.started = false; });
+      },
+
+      toggleMute() {
+        this.muted = !this.muted;
+        if (!this.audio) return;
+        if (this.muted) {
+          this.audio.pause();
+        } else if (this.started) {
+          this.audio.play().catch(() => {});
+        } else {
+          this.start();
+        }
+      }
+    };
+    BGM.init();
 
     // ==========================================================
     // 3. KOMPONEN GERAKAN PEMAIN: jalan, lari, JONGKOK & SLIDE
