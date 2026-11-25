@@ -1,2 +1,2 @@
-# training-battleground
-Ku kira by one tapi malah bawa kawan
+# Shooting Grounds
+You and One Dummy, Lets see how badly you aim
